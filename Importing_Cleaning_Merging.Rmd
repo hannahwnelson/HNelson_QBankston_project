@@ -1,0 +1,94 @@
+---
+title: "Importing and Cleaning Data"
+output: html_document
+date: "2023-11-18"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(here)
+library(tidyverse)
+library(ggplot2)
+library(dplyr)
+library(lubridate)
+
+here()
+```
+
+
+```{r}
+#reading in data for daily maximum temperatures from May to September 1979 
+# to 2021 in Wake County
+WakeCo_DailyMaxTemp <- 
+  read.csv(here("Raw/CDC_WakeCo_DailyMaxTemp_79-21.csv"))
+
+#making the Report.Date column into date format
+WakeCo_DailyMaxTemp$Report.Date <- as.Date(WakeCo_DailyMaxTemp$Report.Date)
+
+#getting rid of columns not needed
+WakeCo_DailyMaxTemp <- WakeCo_DailyMaxTemp %>% 
+  select(State, County, Report.Date, Year, Value)
+
+#renaming value column for clarity
+WakeCo_DailyMaxTemp <- WakeCo_DailyMaxTemp %>%
+  rename("Daily.Max.Temp" = "Value")
+
+head(WakeCo_DailyMaxTemp)
+
+
+#reading in data for daily maximum temperatures from May to September 1979 
+# to 2021 in Orange County
+
+OrangeCo_DailyMaxTemp <- 
+  read.csv(here("Raw/CDC_OrangeCo_DailyMaxTemp_79-21.csv"))
+
+#making the Report.Date column into date format
+OrangeCo_DailyMaxTemp$Report.Date <- as.Date(OrangeCo_DailyMaxTemp$Report.Date)
+
+#getting rid of columns not needed
+OrangeCo_DailyMaxTemp <- OrangeCo_DailyMaxTemp %>% 
+  select(State, County, Report.Date, Year, Value)
+
+#renaming value column for clarity
+OrangeCo_DailyMaxTemp <- OrangeCo_DailyMaxTemp %>%
+  rename("Daily.Max.Temp" = "Value")
+
+head(OrangeCo_DailyMaxTemp)
+
+
+#reading in data for daily maximum temperatures from May to September 1979 
+# to 2021 in Durham County
+
+DurhamCo_DailyMaxTemp <- 
+  read.csv(here("Raw/CDC_DurhamCo_DailyMaxTemp_79-21.csv"))
+
+#making the Report.Date column into date format
+DurhamCo_DailyMaxTemp$Report.Date <- as.Date(DurhamCo_DailyMaxTemp$Report.Date)
+
+#getting rid of columns not needed
+DurhamCo_DailyMaxTemp <- DurhamCo_DailyMaxTemp %>% 
+  select(State, County, Report.Date, Year, Value)
+
+#renaming value column for clarity
+DurhamCo_DailyMaxTemp <- DurhamCo_DailyMaxTemp %>%
+  rename("Daily.Max.Temp" = "Value")
+
+head(DurhamCo_DailyMaxTemp)
+
+
+
+#combine data for all three counties into a data frame that encompasses
+# the whole triangle
+
+Triangle_DailyMaxTemp <- left_join(DurhamCo_DailyMaxTemp, WakeCo_DailyMaxTemp, 
+          by = c("Report.Date", "Year", "State", "County", "Daily.Max.Temp"))
+
+
+Triangle_DailyMaxTemp <- left_join(OrangeCo_DailyMaxTemp, Triangle_DailyMaxTemp,
+          by = c("Report.Date", "Year", "State", "County", "Daily.Max.Temp"))
+
+
+head(Triangle_DailyMaxTemp)
+
+
+```
