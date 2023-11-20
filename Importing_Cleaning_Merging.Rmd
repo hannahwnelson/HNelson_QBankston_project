@@ -11,6 +11,7 @@ library(tidyverse)
 library(ggplot2)
 library(dplyr)
 library(lubridate)
+library(stringr)
 
 here()
 ```
@@ -33,12 +34,49 @@ WakeCo_DailyMaxTemp <- WakeCo_DailyMaxTemp %>%
 WakeCo_DailyMaxTemp <- WakeCo_DailyMaxTemp %>%
   rename("Daily.Max.Temp" = "Value")
 
-head(WakeCo_DailyMaxTemp)
+#separating date column so month and data are separate
+WakeCo_DailyMaxTemp[c("yr", "Month", "Day")] <- 
+  str_split_fixed(WakeCo_DailyMaxTemp$Report.Date, "-", 3)
 
+#getting rid of extra year column, day column, and report date column
+WakeCo_DailyMaxTemp <- WakeCo_DailyMaxTemp %>% 
+  select(State, County, Month, Year, Daily.Max.Temp)
+
+#Renaming month columns to have names instead of numbers
+WakeCo_DailyMaxTemp$Month <- str_replace_all(WakeCo_DailyMaxTemp$Month, 
+                                             "05", "May")
+WakeCo_DailyMaxTemp$Month <- str_replace_all(WakeCo_DailyMaxTemp$Month, 
+                                             "06", "June")
+WakeCo_DailyMaxTemp$Month <- str_replace_all(WakeCo_DailyMaxTemp$Month, 
+                                             "07", "July")
+WakeCo_DailyMaxTemp$Month <- str_replace_all(WakeCo_DailyMaxTemp$Month, 
+                                             "08", "August")
+WakeCo_DailyMaxTemp$Month <- str_replace_all(WakeCo_DailyMaxTemp$Month, 
+                                             "09", "September")
+
+#combine month and date into same column
+WakeCo_DailyMaxTemp <- WakeCo_DailyMaxTemp %>%
+  unite(col = "Date", c("Month", "Year"), sep = " ")
+
+#find average daily temp for each month
+WakeCo_DailyMaxTemp <- WakeCo_DailyMaxTemp %>% 
+  group_by(Date) %>%
+  mutate(Avg_Monthly_Temp = mean(Daily.Max.Temp))
+
+#removing daily max temp column
+WakeCo_DailyMaxTemp <- WakeCo_DailyMaxTemp %>% 
+  select(State, County, Date, Avg_Monthly_Temp)
+
+#keeping only one column from each month
+WakeCo_DailyMaxTemp <- unique(WakeCo_DailyMaxTemp)
+
+WakeCo_DailyMaxTemp
+```
+
+```{r}
 
 #reading in data for daily maximum temperatures from May to September 1979 
 # to 2021 in Orange County
-
 OrangeCo_DailyMaxTemp <- 
   read.csv(here("Raw/CDC_OrangeCo_DailyMaxTemp_79-21.csv"))
 
@@ -53,12 +91,48 @@ OrangeCo_DailyMaxTemp <- OrangeCo_DailyMaxTemp %>%
 OrangeCo_DailyMaxTemp <- OrangeCo_DailyMaxTemp %>%
   rename("Daily.Max.Temp" = "Value")
 
-head(OrangeCo_DailyMaxTemp)
+#separating date column so month and data are separate
+OrangeCo_DailyMaxTemp[c("yr", "Month", "Day")] <- 
+  str_split_fixed(OrangeCo_DailyMaxTemp$Report.Date, "-", 3)
 
+#getting rid of extra year column, day column, and report date column
+OrangeCo_DailyMaxTemp <- OrangeCo_DailyMaxTemp %>% 
+  select(State, County, Month, Year, Daily.Max.Temp)
 
-#reading in data for daily maximum temperatures from May to September 1979 
-# to 2021 in Durham County
+#Renaming month columns to have names instead of numbers
+OrangeCo_DailyMaxTemp$Month <- str_replace_all(OrangeCo_DailyMaxTemp$Month, 
+                                             "05", "May")
+OrangeCo_DailyMaxTemp$Month <- str_replace_all(OrangeCo_DailyMaxTemp$Month, 
+                                             "06", "June")
+OrangeCo_DailyMaxTemp$Month <- str_replace_all(OrangeCo_DailyMaxTemp$Month, 
+                                             "07", "July")
+OrangeCo_DailyMaxTemp$Month <- str_replace_all(OrangeCo_DailyMaxTemp$Month, 
+                                             "08", "August")
+OrangeCo_DailyMaxTemp$Month <- str_replace_all(OrangeCo_DailyMaxTemp$Month, 
+                                             "09", "September")
 
+#combine month and date into same column
+OrangeCo_DailyMaxTemp <- OrangeCo_DailyMaxTemp %>%
+  unite(col = "Date", c("Month", "Year"), sep = " ")
+
+#find average daily temp for each month
+OrangeCo_DailyMaxTemp <- OrangeCo_DailyMaxTemp %>% 
+  group_by(Date) %>%
+  mutate(Avg_Monthly_Temp = mean(Daily.Max.Temp))
+
+#removing daily max temp column
+OrangeCo_DailyMaxTemp <- OrangeCo_DailyMaxTemp %>% 
+  select(State, County, Date, Avg_Monthly_Temp)
+
+#keeping only one column from each month
+OrangeCo_DailyMaxTemp <- unique(OrangeCo_DailyMaxTemp)
+
+OrangeCo_DailyMaxTemp
+```
+
+```{r}
+
+#reading in data for daily maximum temperatures from May to September 1979 to 2021 in Durham County
 DurhamCo_DailyMaxTemp <- 
   read.csv(here("Raw/CDC_DurhamCo_DailyMaxTemp_79-21.csv"))
 
@@ -73,22 +147,96 @@ DurhamCo_DailyMaxTemp <- DurhamCo_DailyMaxTemp %>%
 DurhamCo_DailyMaxTemp <- DurhamCo_DailyMaxTemp %>%
   rename("Daily.Max.Temp" = "Value")
 
-head(DurhamCo_DailyMaxTemp)
+#separating date column so month and data are separate
+DurhamCo_DailyMaxTemp[c("yr", "Month", "Day")] <- 
+  str_split_fixed(DurhamCo_DailyMaxTemp$Report.Date, "-", 3)
 
+#getting rid of extra year column, day column, and report date column
+DurhamCo_DailyMaxTemp <- DurhamCo_DailyMaxTemp %>% 
+  select(State, County, Month, Year, Daily.Max.Temp)
 
+#Renaming month columns to have names instead of numbers
+DurhamCo_DailyMaxTemp$Month <- str_replace_all(DurhamCo_DailyMaxTemp$Month, 
+                                             "05", "May")
+DurhamCo_DailyMaxTemp$Month <- str_replace_all(DurhamCo_DailyMaxTemp$Month, 
+                                             "06", "June")
+DurhamCo_DailyMaxTemp$Month <- str_replace_all(DurhamCo_DailyMaxTemp$Month, 
+                                             "07", "July")
+DurhamCo_DailyMaxTemp$Month <- str_replace_all(DurhamCo_DailyMaxTemp$Month, 
+                                             "08", "August")
+DurhamCo_DailyMaxTemp$Month <- str_replace_all(DurhamCo_DailyMaxTemp$Month, 
+                                             "09", "September")
 
-#combine data for all three counties into a data frame that encompasses
-# the whole triangle
+#combine month and date into same column
+DurhamCo_DailyMaxTemp <- DurhamCo_DailyMaxTemp %>%
+  unite(col = "Date", c("Month", "Year"), sep = " ")
 
+#find average daily temp for each month
+DurhamCo_DailyMaxTemp <- DurhamCo_DailyMaxTemp %>% 
+  group_by(Date) %>%
+  mutate(Avg_Monthly_Temp = mean(Daily.Max.Temp))
+
+#removing daily max temp column
+DurhamCo_DailyMaxTemp <- DurhamCo_DailyMaxTemp %>% 
+  select(State, County, Date, Avg_Monthly_Temp)
+
+#keeping only one column from each month
+DurhamCo_DailyMaxTemp <- unique(DurhamCo_DailyMaxTemp)
+
+DurhamCo_DailyMaxTemp
+```
+
+```{r}
+#combine data for all three counties into a data frame that encompasses the whole triangle
 Triangle_DailyMaxTemp <- left_join(DurhamCo_DailyMaxTemp, WakeCo_DailyMaxTemp, 
-          by = c("Report.Date", "Year", "State", "County", "Daily.Max.Temp"))
-
+          by = c("Date", "State", "County", "Avg_Monthly_Temp"))
 
 Triangle_DailyMaxTemp <- left_join(OrangeCo_DailyMaxTemp, Triangle_DailyMaxTemp,
-          by = c("Report.Date", "Year", "State", "County", "Daily.Max.Temp"))
+          by = c("Date", "State", "County", "Avg_Monthly_Temp"))
 
-
-head(Triangle_DailyMaxTemp)
-
-
+Triangle_DailyMaxTemp
 ```
+
+
+```{r}
+#data for number of extreme heat days (above 90 F) from May to September in all NC counties from 1979-2021
+NC_ExHeatDays <- 
+  read.csv(here("Raw/CDC_NC_ExtremeHeatDays_79-21.csv"), stringsAsFactors=T)
+
+#remove unnecessary columns
+NC_ExHeatDays <- NC_ExHeatDays %>% select(Census.Tract, Year, Value)
+
+#remove unnecessary text from county column
+NC_ExHeatDays$Census.Tract <- word(NC_ExHeatDays$Census.Tract, 1)
+
+#renaming columns for clarity
+NC_ExHeatDays <- NC_ExHeatDays %>%
+  rename("County" = "Census.Tract", "Count_ExHeat_Days" = "Value")
+
+
+NC_ExHeatDays$Count_ExHeat_Days <- as.character(NC_ExHeatDays$Count_ExHeat_Days)
+
+NC_ExHeatDays$Year <- as.character(NC_ExHeatDays$Year)
+
+NC_ExHeatDays
+```
+
+
+
+
+
+```{r}
+#exporting cleaned data frames
+write.csv(Triangle_DailyMaxTemp, "Triangle_DailyMaxTemp_Clean.csv", 
+          row.names=TRUE)
+
+write.csv(WakeCo_DailyMaxTemp, "WakeCo_DailyMaxTemp_Clean.csv", 
+          row.names=TRUE)
+
+write.csv(OrangeCo_DailyMaxTemp, "OrangeCo_DailyMaxTemp_Clean.csv", 
+          row.names=TRUE)
+
+write.csv(DurhamCo_DailyMaxTemp, "DurhamCo_DailyMaxTemp_Clean.csv", 
+          row.names=TRUE)
+```
+
