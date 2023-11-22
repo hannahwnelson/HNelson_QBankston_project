@@ -1,0 +1,140 @@
+---
+title: "MapsENVIRONProj"
+author: "Quinn Bankson"
+date: "2023-11-22"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+You can also embed plots, for example:
+
+```{r}
+# Read in counties for NC
+library(here)
+library(tidyverse)
+library(sf)
+library(leaflet)
+library(mapview)
+library(janitor)
+library(dplyr)
+library(stringr)
+library(purrr)
+getwd()
+here()
+
+nccounties_sf <- st_read(here('Raw/Spatial/cb_2018_us_county_20m.shp')) %>%
+  filter(STATEFP == 37)
+
+mapview(nccounties_sf)
+```
+
+```{r}
+#EDVisits
+edvisits <- read_csv(here('Cleaned/CDC_EDvisits_NC_08-21_Clean.csv'))
+
+#EXHeatDays
+exheatdays <- read_csv(here('Cleaned/CDC_ExHeatDays_NCbyCo_08-21_Clean.csv'))
+
+#AQI 
+aqi <- read_csv(here('EPA_dailyAQI_NCbyCo_08-21_Clean.csv'))
+
+#Urban
+
+urbanlvl <- read_csv(here('Raw/urbancodes.csv'))
+# Rename columns
+colnames(urbanlvl) <- c("FIPS", "state", "county", "a", "b", "c", "lvlcode", "d", "e")
+```
+# 1 Represents a large central metro (red)
+# 2 Represents a large fringe metro (orange)
+# 3 Represents a medium metro (yellow)
+# 4 Represents a small metro (green)
+# 5 Represents a micropolitan area (blue)
+# 6 Represents a noncore area (violet)
+```{r}
+
+urbanlvl <- urbanlvl %>%
+  filter(state == "NC") %>%
+  select(-"state", -"county", -"a", -"b", -"c", -"d", -"e") %>%
+  mutate(FIPS = as.character(FIPS))
+
+counties_urban_sf <- full_join(nccounties_sf, urbanlvl, by =c("GEOID" = "FIPS"))
+```
+```{r}
+level_colors <- c("#FF0000", "#FFA500", "#FFFF00", "#008000", "#0000FF", "#800080")
+
+# Creating a map
+counties_urban_sf <- st_transform(counties_urban_sf, crs = st_crs("+proj=longlat +datum=WGS84"))
+
+map <- leaflet(counties_urban_sf) %>%
+  addProviderTiles("CartoDB.Positron") %>%  # You can choose a different tile provider
+  addPolygons(
+    fillColor = ~level_colors[lvlcode],
+    fillOpacity = 0.7,
+    color = "white",
+    weight = 1,
+    popup = ~paste("County: ", NAME, "<br>Urban Code: ", lvlcode)
+  ) %>%
+  addLegend(
+    position = "bottomright",
+    colors = level_colors,
+    labels = c("1 (Most Urban)", "2", "3", "4", "5", "6 (Least Urban"),
+    title = "Level Code"
+  )
+
+map
+```
+
+```{r}
+# AQI
+
+aqi_map_2021data <- aqi %>%
+  filter(Year == 2021) %>%
+  select("County", "Median.AQI") %>%
+  mutate(County = str_replace(County, " County", ""))
+
+aqiurban21_sf <- left_join(counties_urban_sf, aqi_map_2021data, by = c("NAME" = "County"))
+
+unique(aqiurban21_sf$Median.AQI)
+```
+
+```{r}
+library(leaflet)
+library(sf)
+
+# Assuming 'aqiurban21_sf' is your spatial data frame with AQI values
+# Update this line with your actual data frame
+aqiurban21_sf <- st_transform(aqiurban21_sf, crs = st_crs("+proj=longlat +datum=WGS84"))
+
+# Define a discrete color palette for AQI bins
+aqi_colors <- c("#FFFFFF", "#FFA500", "#FF0000", "#8B0000", "#764825", "#695f5e")  # Adjust colors as needed
+
+# Create bins for AQI values
+bins <- c(25, 30, 35, 40, 45)  # Adjust the bin ranges as needed
+aqiurban21_sf$AQI_bin <- cut(aqiurban21_sf$Median.AQI, breaks = bins, labels = FALSE, include.lowest = TRUE)
+
+# Create a leaflet map
+aqi_map <- leaflet(aqiurban21_sf) %>%
+  addProviderTiles("CartoDB.Positron") %>%  # You can choose a different tile provider
+  addPolygons(
+    fillColor = ~aqi_colors[AQI_bin],
+    fillOpacity = 0.7,
+    color = "white",
+    weight = 1,
+    popup = ~paste("County: ", NAME, "<br>AQI: ", Median.AQI)
+  ) %>%
+  addLegend(
+    position = "bottomright",
+    colors = aqi_colors,
+    labels = c("No Data", "Less than 25", "26-30", "31-35", "36-40", "41-45"),
+    title = "AQI Values"
+  )
+
+# Display the AQI map
+aqi_map
+
+```
+
