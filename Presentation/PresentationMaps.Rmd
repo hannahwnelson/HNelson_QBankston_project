@@ -130,12 +130,57 @@ aqi_map <- leaflet(aqiurban21_sf) %>%
     position = "bottomright",
     colors = aqi_colors,
     labels = c("No Data", "Less than 25", "26-30", "31-35", "36-40", "41-45"),
-    title = "AQI Values"
+    title = "AQI Values (2021)"
   )
 
 # Display the AQI map
 aqi_map
 
+```
+
+```{r}
+aqi_map_2011data <- aqi %>%
+  filter(Year == 2011) %>%
+  select("County", "Median.AQI") %>%
+  mutate(County = str_replace(County, " County", ""))
+
+aqiurban11_sf <- left_join(counties_urban_sf, aqi_map_2011data, by = c("NAME" = "County"))
+```
+
+```{r}
+library(leaflet)
+library(sf)
+
+# Assuming 'aqiurban21_sf' is your spatial data frame with AQI values
+# Update this line with your actual data frame
+aqiurban11_sf <- st_transform(aqiurban11_sf, crs = st_crs("+proj=longlat +datum=WGS84"))
+
+# Define a discrete color palette for AQI bins
+aqi_colors <- c("#FFFFFF", "#FFA500", "#764825","#695f5e", "#8B0000", "#FF0000", "#FF439B")  # Adjust colors as needed
+
+# Create bins for AQI values
+bins <- c(0, 1, 25, 30, 35, 40, 45, 50)  # Adjust the bin ranges as needed
+aqiurban11_sf$AQI_bin <- cut(aqiurban11_sf$Median.AQI, breaks = bins, labels = FALSE, include.lowest = TRUE)
+
+# Create a leaflet map
+aqi_map11 <- leaflet(aqiurban11_sf) %>%
+  addProviderTiles("CartoDB.Positron") %>%  # You can choose a different tile provider
+  addPolygons(
+    fillColor = ~aqi_colors[AQI_bin],
+    fillOpacity = 0.7,
+    color = "white",
+    weight = 1,
+    popup = ~paste("County: ", NAME, "<br>AQI: ", Median.AQI)
+  ) %>%
+  addLegend(
+    position = "bottomright",
+    colors = aqi_colors,
+    labels = c("No Data", "Less than 25", "26-30", "31-35", "36-40", "41-45", "45+"),
+    title = "AQI Values (2011)"
+  )
+
+# Display the AQI map
+aqi_map11
 ```
 
 ```{r}
