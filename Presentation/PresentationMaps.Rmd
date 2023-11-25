@@ -40,7 +40,7 @@ edvisits <- read_csv(here('Cleaned/CDC_EDvisits_NC_08-21_Clean.csv'))
 exheatdays <- read_csv(here('Cleaned/CDC_ExHeatDays_NCbyCo_08-21_Clean.csv'))
 
 #AQI 
-aqi <- read_csv(here('EPA_dailyAQI_NCbyCo_08-21_Clean.csv'))
+aqi <- read_csv(here('Cleaned/EPA_dailyAQI_NCbyCo_08-21_Clean.csv'))
 
 #Urban
 
@@ -55,7 +55,7 @@ colnames(urbanlvl) <- c("FIPS", "state", "county", "a", "b", "c", "lvlcode", "d"
 # 5 Represents a micropolitan area (blue)
 # 6 Represents a noncore area (violet)
 ```{r}
-
+urbanlvl
 urbanlvl <- urbanlvl %>%
   filter(state == "NC") %>%
   select(-"state", -"county", -"a", -"b", -"c", -"d", -"e") %>%
