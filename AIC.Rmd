@@ -1,0 +1,78 @@
+---
+title: "AIC"
+output: html_document
+date: "2023-11-25"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+```
+
+
+```{r}
+urban_level <- urban_level %>% rename("CountyFIPS" = "FIPS.code")
+NC_ExHeatDays
+NC_AQI <- NC_AQI %>% select(County, Year, Median.AQI)
+NC_COPDmortality
+NC_AsthmaED 
+
+df <- merge(NC_COPDmortality, urban_level, by = "CountyFIPS")
+df <- df %>% select(County.x, Year, annual_COPD_deaths_per100000, urban_level)
+df <- df %>% rename("County" = "County.x")
+df1 <- merge(df, NC_AsthmaED)
+df2 <- merge(df1, NC_AQI)
+heat_health <- merge(df2, NC_ExHeatDays)
+
+heat_health <- heat_health %>% 
+  select(County, Year, urban_level, annual_COPD_deaths_per100000, 
+         annual_asthma_ED_visits, Median.AQI, Count_ExHeat_Days)
+
+
+
+heat_health <- na.omit(heat_health)
+
+heat_health$Year <- as.numeric(heat_health$Year)
+
+heat_health$Median.AQI <- as.numeric(heat_health$Median.AQI)
+
+heat_health$Count_ExHeat_Days <- as.numeric(heat_health$Count_ExHeat_Days)
+
+heat_health$urban_level <- as.numeric(heat_health$urban_level)
+
+heat_health$annual_COPD_deaths_per100000 <- 
+  as.numeric(heat_health$annual_COPD_deaths_per100000)
+
+heat_health$annual_asthma_ED_visits <- 
+  as.numeric(heat_health$annual_asthma_ED_visits)
+
+
+heat_health
+```
+
+
+```{r}
+AIC_asthma <- lm(data = heat_health, annual_asthma_ED_visits ~ urban_level + 
+            Median.AQI + Count_ExHeat_Days)
+
+step(AIC_asthma)
+
+plot(AIC_asthma)
+
+
+AIC_COPD <- lm(data = heat_health, annual_COPD_deaths_per100000 ~ urban_level + 
+            Median.AQI + Count_ExHeat_Days)
+
+step(AIC_COPD)
+
+plot(AIC_COPD)
+
+```
+
+
+
+
+
+
+
+
