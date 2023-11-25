@@ -1,0 +1,25 @@
+---
+title: "Untitled"
+author: "Quinn Bankson"
+date: "2023-11-24"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(tidyverse)
+library(rvest)
+library(here)
+```
+
+```{r}
+here()
+
+copd1 <- read_csv(here('Raw/County_COPD_prevalence.csv')) %>%
+  filter(Public_Health_Jurisdiction == "NC") %>%
+  select("LocationID", "Percent_COPD")
+
+write_csv(copd1, here("Cleaned/County_COPD_prevalence.csv"))
+```
+

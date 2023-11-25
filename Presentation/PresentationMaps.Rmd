@@ -40,7 +40,7 @@ edvisits <- read_csv(here('Cleaned/CDC_EDvisits_NC_08-21_Clean.csv'))
 exheatdays <- read_csv(here('Cleaned/CDC_ExHeatDays_NCbyCo_08-21_Clean.csv'))
 
 #AQI 
-aqi <- read_csv(here('EPA_dailyAQI_NCbyCo_08-21_Clean.csv'))
+aqi <- read_csv(here('Cleaned/EPA_dailyAQI_NCbyCo_08-21_Clean.csv'))
 
 #Urban
 
@@ -110,10 +110,10 @@ library(sf)
 aqiurban21_sf <- st_transform(aqiurban21_sf, crs = st_crs("+proj=longlat +datum=WGS84"))
 
 # Define a discrete color palette for AQI bins
-aqi_colors <- c("#FFFFFF", "#FFA500", "#FF0000", "#8B0000", "#764825", "#695f5e")  # Adjust colors as needed
+aqi_colors <- c("#FFFFFF", "#FFA500", "#764825","#695f5e", "#8B0000", "#FF0000")  # Adjust colors as needed
 
 # Create bins for AQI values
-bins <- c(25, 30, 35, 40, 45)  # Adjust the bin ranges as needed
+bins <- c(0, 1, 25, 30, 35, 40, 45)  # Adjust the bin ranges as needed
 aqiurban21_sf$AQI_bin <- cut(aqiurban21_sf$Median.AQI, breaks = bins, labels = FALSE, include.lowest = TRUE)
 
 # Create a leaflet map
@@ -135,6 +135,10 @@ aqi_map <- leaflet(aqiurban21_sf) %>%
 
 # Display the AQI map
 aqi_map
+
+```
+
+```{r}
 
 ```
 
