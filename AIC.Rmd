@@ -6,7 +6,7 @@ date: "2023-11-25"
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-
+library(corrplot)
 ```
 
 
@@ -69,6 +69,21 @@ plot(AIC_COPD)
 
 ```
 
+```{r}
+
+heat_health_numeric <- heat_health %>% 
+  select(Year, urban_level, annual_COPD_deaths_per100000, 
+         annual_asthma_ED_visits, Median.AQI, Count_ExHeat_Days)
+
+
+
+heat_health_numeric <- cor(heat_health_numeric)
+
+corrplot(round(heat_health_numeric, 4), method="color", 
+         addCoef.col = 'black', tl.cex = 0.5, tl.srt = 45)
+
+
+```
 
 
 
