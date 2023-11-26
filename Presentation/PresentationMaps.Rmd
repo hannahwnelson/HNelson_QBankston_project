@@ -55,7 +55,7 @@ colnames(urbanlvl) <- c("FIPS", "state", "county", "a", "b", "c", "lvlcode", "d"
 # 5 Represents a micropolitan area (blue)
 # 6 Represents a noncore area (violet)
 ```{r}
-
+urbanlvl
 urbanlvl <- urbanlvl %>%
   filter(state == "NC") %>%
   select(-"state", -"county", -"a", -"b", -"c", -"d", -"e") %>%

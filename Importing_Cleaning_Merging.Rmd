@@ -20,34 +20,15 @@ Extreme Heat Days NC all counties
 ```{r}
 #data for number of extreme heat days (above 90 F) from May to September in all NC counties from 1979-2021
 NC_ExHeatDays <- 
-  read.csv(here("Raw/CDC_NC_ExtremeHeatDays_79-21.csv"), stringsAsFactors=T)
+  read.csv(here("Raw/CDC_NCbyCo_ExtremeHeatDays_08-21.csv"), stringsAsFactors=T)
 
 #remove unnecessary columns
-NC_ExHeatDays <- NC_ExHeatDays %>% select(Census.Tract, Year, Value)
-
-#remove unnecessary text from county column
-NC_ExHeatDays$Census.Tract <- word(NC_ExHeatDays$Census.Tract, 1)
+NC_ExHeatDays <- NC_ExHeatDays %>% select(County, Year, Value)
 
 #renaming columns for clarity
 NC_ExHeatDays <- NC_ExHeatDays %>%
-  rename("County" = "Census.Tract", "Count_ExHeat_Days" = "Value")
+  rename("Count_ExHeat_Days" = "Value")
 
-#removing years not needed
-NC_ExHeatDays <- NC_ExHeatDays[!(NC_ExHeatDays$Year == "1979" | 
-    NC_ExHeatDays$Year == "1980" | NC_ExHeatDays$Year == "1981" | 
-      NC_ExHeatDays$Year == "1982" | NC_ExHeatDays$Year == "1983" | 
-      NC_ExHeatDays$Year == "1984" | NC_ExHeatDays$Year == "1985" | 
-      NC_ExHeatDays$Year == "1986" | NC_ExHeatDays$Year == "1987" | 
-      NC_ExHeatDays$Year == "1988" | NC_ExHeatDays$Year == "1989" | 
-      NC_ExHeatDays$Year == "1990" | NC_ExHeatDays$Year == "1991" | 
-      NC_ExHeatDays$Year == "1992" | NC_ExHeatDays$Year == "1993" | 
-      NC_ExHeatDays$Year == "1994" | NC_ExHeatDays$Year == "1995" | 
-      NC_ExHeatDays$Year == "1996" | NC_ExHeatDays$Year == "1997" | 
-      NC_ExHeatDays$Year == "1998" | NC_ExHeatDays$Year == "1999" | 
-      NC_ExHeatDays$Year == "2000" | NC_ExHeatDays$Year == "2001" | 
-      NC_ExHeatDays$Year == "2002" | NC_ExHeatDays$Year == "2003" |
-      NC_ExHeatDays$Year == "2004" | NC_ExHeatDays$Year == "2005" | 
-      NC_ExHeatDays$Year == "2006" | NC_ExHeatDays$Year == "2007"),]
 
 
 NC_ExHeatDays
@@ -80,7 +61,7 @@ AQI 2008
 ```{r}
 #read in AQI data from 2008 from all US counties 
 AQI_2008 <- read.csv(here("Raw/EPA_dailyAQI_USAbyCo_2008.csv"), 
-                     stringsAsFactors = TRUE)
+                     stringsAsFactors = F)
 
 #include data only from NC
 AQI_2008 <- AQI_2008 %>%
@@ -99,7 +80,7 @@ AQI 2009
 ```{r}
 #read in AQI data from 2009 from all US counties 
 AQI_2009 <- read.csv(here("Raw/EPA_dailyAQI_USAbyCo_2009.csv"), 
-                     stringsAsFactors = TRUE)
+                     stringsAsFactors = F)
 
 #include data only from NC
 AQI_2009 <- AQI_2009 %>%
@@ -118,7 +99,7 @@ AQI 2010
 ```{r}
 #read in AQI data from 2010 from all US counties 
 AQI_2010 <- read.csv(here("Raw/EPA_dailyAQI_USAbyCo_2010.csv"), 
-                     stringsAsFactors = TRUE)
+                     stringsAsFactors = F)
 
 #include data only from NC
 AQI_2010 <- AQI_2010 %>%
@@ -137,7 +118,7 @@ AQI 2011
 ```{r}
 #read in AQI data from 2011 from all US counties 
 AQI_2011 <- read.csv(here("Raw/EPA_dailyAQI_USAbyCo_2011.csv"), 
-                     stringsAsFactors = TRUE)
+                     stringsAsFactors = F)
 
 #include data only from NC
 AQI_2011 <- AQI_2011 %>%
@@ -156,7 +137,7 @@ AQI 2012
 ```{r}
 #read in AQI data from 2012 from all US counties 
 AQI_2012 <- read.csv(here("Raw/EPA_dailyAQI_USAbyCo_2012.csv"), 
-                     stringsAsFactors = TRUE)
+                     stringsAsFactors = F)
 
 #include data only from NC
 AQI_2012 <- AQI_2012 %>%
@@ -175,7 +156,7 @@ AQI 2013
 ```{r}
 #read in AQI data from 2013 from all US counties 
 AQI_2013 <- read.csv(here("Raw/EPA_dailyAQI_USAbyCo_2013.csv"), 
-                     stringsAsFactors = TRUE)
+                     stringsAsFactors = F)
 
 #include data only from NC
 AQI_2013 <- AQI_2013 %>%
@@ -194,7 +175,7 @@ AQI 2014
 ```{r}
 #read in AQI data from 2014 from all US counties 
 AQI_2014 <- read.csv(here("Raw/EPA_dailyAQI_USAbyCo_2014.csv"), 
-                     stringsAsFactors = TRUE)
+                     stringsAsFactors = F)
 
 #include data only from NC
 AQI_2014 <- AQI_2014 %>%
@@ -213,7 +194,7 @@ AQI 2015
 ```{r}
 #read in AQI data from 2015 from all US counties 
 AQI_2015 <- read.csv(here("Raw/EPA_dailyAQI_USAbyCo_2015.csv"), 
-                     stringsAsFactors = TRUE)
+                     stringsAsFactors = F)
 
 #include data only from NC
 AQI_2015 <- AQI_2015 %>%
@@ -232,7 +213,7 @@ AQI 2016
 ```{r}
 #read in AQI data from 2016 from all US counties 
 AQI_2016 <- read.csv(here("Raw/EPA_dailyAQI_USAbyCo_2016.csv"), 
-                     stringsAsFactors = TRUE)
+                     stringsAsFactors = F)
 
 #include data only from NC
 AQI_2016 <- AQI_2016 %>%
@@ -251,7 +232,7 @@ AQI 2017
 ```{r}
 #read in AQI data from 2017 from all US counties 
 AQI_2017 <- read.csv(here("Raw/EPA_dailyAQI_USAbyCo_2017.csv"), 
-                     stringsAsFactors = TRUE)
+                     stringsAsFactors = F)
 
 #include data only from NC
 AQI_2017 <- AQI_2017 %>%
@@ -270,7 +251,7 @@ AQI 2018
 ```{r}
 #read in AQI data from 2018 from all US counties 
 AQI_2018 <- read.csv(here("Raw/EPA_dailyAQI_USAbyCo_2018.csv"), 
-                     stringsAsFactors = TRUE)
+                     stringsAsFactors = F)
 
 #include data only from NC
 AQI_2018 <- AQI_2018 %>%
@@ -289,7 +270,7 @@ AQI 2019
 ```{r}
 #read in AQI data from 2019 from all US counties 
 AQI_2019 <- read.csv(here("Raw/EPA_dailyAQI_USAbyCo_2019.csv"), 
-                     stringsAsFactors = TRUE)
+                     stringsAsFactors = F)
 
 #include data only from NC
 AQI_2019 <- AQI_2019 %>%
@@ -308,7 +289,7 @@ AQI 2020
 ```{r}
 #read in AQI data from 2010 from all US counties 
 AQI_2020 <- read.csv(here("Raw/EPA_dailyAQI_USAbyCo_2020.csv"), 
-                     stringsAsFactors = TRUE)
+                     stringsAsFactors = F)
 
 #include data only from NC
 AQI_2020 <- AQI_2020 %>%
@@ -327,7 +308,7 @@ AQI 2021
 ```{r}
 #read in AQI data from 2021 from all US counties 
 AQI_2021 <- read.csv(here("Raw/EPA_dailyAQI_USAbyCo_2021.csv"), 
-                     stringsAsFactors = TRUE)
+                     stringsAsFactors = F)
 
 #include data only from NC
 AQI_2021 <- AQI_2021 %>%
@@ -370,9 +351,51 @@ df12 <- full_join(AQI_2020, df11)
 
 NC_AQI <- full_join(AQI_2021, df12) 
 
-
 NC_AQI
 ```
+
+```{r}
+NC_AsthmaED <- read.csv(here("Raw/CDC_AsthmaED_NCbyCo_08-21.csv"))
+
+NC_AsthmaED <- NC_AsthmaED %>% 
+  select(CountyFIPS, County, Year, Value)
+
+NC_AsthmaED <- NC_AsthmaED %>% 
+  rename("annual_asthma_ED_visits" = "Value")
+
+
+NC_AsthmaED 
+```
+
+```{r}
+NC_COPDmortality <- read.csv(here("Raw/CDC_COPDmort_NCbyCo_00-20.csv"))
+
+NC_COPDmortality <- NC_COPDmortality %>% select(CountyFIPS, County, Year, Value)
+
+NC_COPDmortality <- NC_COPDmortality %>% 
+  rename("annual_COPD_deaths_per100000" = "Value")
+
+NC_COPDmortality
+```
+
+
+```{r}
+urban_level <- read.csv(here("Raw/urbancodes.csv"))
+
+urban_level <- urban_level %>% filter(State.Abr. == "NC")
+
+urban_level <- urban_level %>% 
+  select(FIPS.code, County.name, X2013.code)
+
+urban_level <- urban_level %>%
+  rename("urban_level" = "X2013.code", "County" = "County.name")
+
+urban_level$County <- str_replace_all(urban_level$County,"County", "")
+
+
+urban_level
+```
+
 
 Exporting
 ```{r}
