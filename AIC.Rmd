@@ -7,6 +7,8 @@ date: "2023-11-25"
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(corrplot)
+library(tidyverse)
+library(dplyr)
 ```
 
 
@@ -86,6 +88,22 @@ corrplot(round(heat_health_numeric, 4), method="color",
 ```
 
 
+```{r}
+#Regressions of all kinds
+
+aux1_urban <- lm(data = heat_health, annual_COPD_deaths_per100000 ~ urban_level)
+aux2_heat <- lm(data = heat_health, annual_COPD_deaths_per100000 ~ Median.AQI)
+aux3_aqi <- lm(data = heat_health, annual_COPD_deaths_per100000 ~ Count_ExHeat_Days)
+
+summary(aux1_urban)
+summary(aux2_heat)
+summary(aux3_aqi)
+
+mv_reg1<- lm(data = heat_health, annual_COPD_deaths_per100000 ~ urban_level + 
+            Median.AQI + Count_ExHeat_Days)
+
+summary(mv_reg1)
+```
 
 
 

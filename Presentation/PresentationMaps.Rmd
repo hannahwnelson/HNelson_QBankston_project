@@ -23,6 +23,7 @@ library(janitor)
 library(dplyr)
 library(stringr)
 library(purrr)
+library(webshot)
 getwd()
 here()
 
@@ -69,23 +70,23 @@ level_colors <- c("#FF0000", "#FFA500", "#FFFF00", "#008000", "#0000FF", "#80008
 # Creating a map
 counties_urban_sf <- st_transform(counties_urban_sf, crs = st_crs("+proj=longlat +datum=WGS84"))
 
-map <- leaflet(counties_urban_sf) %>%
-  addProviderTiles("CartoDB.Positron") %>%  # You can choose a different tile provider
+urbanmap <- leaflet(counties_urban_sf) %>%
+  addProviderTiles("CartoDB.Positron") %>%
   addPolygons(
     fillColor = ~level_colors[lvlcode],
     fillOpacity = 0.7,
     color = "white",
     weight = 1,
-    popup = ~paste("County: ", NAME, "<br>Urban Code: ", lvlcode)
+    popup = ~paste("County: ", NAME, "Urban Code: ", lvlcode)
   ) %>%
   addLegend(
     position = "bottomright",
     colors = level_colors,
     labels = c("1 (Most Urban)", "2", "3", "4", "5", "6 (Least Urban"),
-    title = "Level Code"
+    title = "Urban Level Code"
   )
 
-map
+urbanmap
 ```
 
 ```{r}
@@ -184,7 +185,7 @@ aqi_map11
 ```
 
 ```{r}
-asthma <-read_csv(here("Raw/CDC_AsthmaHosp_NCbyCo_08-21.csv"))
+asthma <-read_csv(here("Raw/CDC_AsthmaED_NCbyCo_08-21.csv"))
 
 copd <- read_csv(here("Raw/CDC_COPDmort_NCbyCo_00-20.csv"))
 
@@ -214,6 +215,12 @@ unique(outcomes_2020_sf$asthmaval)
 ```{r}
 library(leaflet)
 library(sf)
+
+outcomes_2020_sf <- outcomes_2020_sf %>%
+  filter(!is.na(copdval) & copdval != "Suppressed")
+
+outcomes_2020_sf$copdval <- as.numeric(outcomes_2020_sf$copdval)
+unique(outcomes_2020_sf$copdval)
 
 # Assuming 'outcomes_2020_sf' is your spatial data frame with COPD values
 # Update this line with your actual data frame
