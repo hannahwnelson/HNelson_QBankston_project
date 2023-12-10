@@ -157,7 +157,7 @@ library(sf)
 aqiurban11_sf <- st_transform(aqiurban11_sf, crs = st_crs("+proj=longlat +datum=WGS84"))
 
 # Define a discrete color palette for AQI bins
-aqi_colors <- c("#FFFFFF", "#FFA500", "#764825","#695f5e", "#8B0000", "#FF0000", "#FF439B")  # Adjust colors as needed
+aqi_colors <- c("#FFFFFF", "#FFA500", "#764825","#695f5e", "#8B0000", "#FF0000", "#FF439B") 
 
 # Create bins for AQI values
 bins <- c(0, 1, 25, 30, 35, 40, 45, 50)  # Adjust the bin ranges as needed
@@ -165,7 +165,7 @@ aqiurban11_sf$AQI_bin <- cut(aqiurban11_sf$Median.AQI, breaks = bins, labels = F
 
 # Create a leaflet map
 aqi_map11 <- leaflet(aqiurban11_sf) %>%
-  addProviderTiles("CartoDB.Positron") %>%  # You can choose a different tile provider
+  addProviderTiles("CartoDB.Positron") %>%  
   addPolygons(
     fillColor = ~aqi_colors[AQI_bin],
     fillOpacity = 0.7,
@@ -256,6 +256,29 @@ copd_map <- leaflet(outcomes_2020_sf) %>%
 # Display the COPD map
 copd_map
 
+```
+```{r}
+SmkDrnk2020 <- read_csv(here("Raw/2020SmokingDrinkingNC.csv")) %>%
+  filter(FIPS != 37000) %>%
+  rename("PctSmoke" = "% Smokers")%>%
+  rename("PctDrnk" = "% Excessive Drinking")
+
+
+unique(SmkDrnk2020$PctSmoke)
+SmkDrnk2020 <- mutate(SmkDrnk2020, FIPS = as.character(FIPS))
+tableau_outcomes_2020_sf <- left_join(outcomes_2020_sf, SmkDrnk2020, by = c("GEOID" = "FIPS")) %>%
+  select(-"State.x", -"County.x", -"PctSmoke.x", -"% Excessive Drinking.x", -"State.y", -"County.y", -"PctSmoke.y", "% Excessive Drinking.y")
+
+HealthIns <- read_csv(here("Raw/HealthInsurance2020NC.csv")) %>%
+  select("FIPS", "TotUninsured", "PctUninsured") %>%
+  mutate(FIPS = as.character(FIPS))
+
+tableau_outcomes_2020_sf <- left_join(tableau_outcomes_2020_sf, HealthIns, by = c("GEOID" = "FIPS"))
+
+#output_directory <- "/Users/mac/Documents/HannahQuinn872/Presentation/"
+
+# Save the shapefile
+st_write(tableau_outcomes_2020_sf, paste0(output_directory, "2020outcometableau.shp"), driver = "ESRI Shapefile", append = FALSE)
 ```
 
 
