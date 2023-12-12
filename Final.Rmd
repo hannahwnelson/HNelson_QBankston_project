@@ -37,7 +37,10 @@ heat_health <- heat_health %>%
          annual_asthma_ED_visits, Median.AQI, Count_ExHeat_Days)
 ```
 
-### Investigating Data
+#### Investigating Data
+
+## Corrplot
+This corrplot visualizes relationships between variables in the data to create an idea of what to look for in an exploratory data analysis.
 ```{r, echo=FALSE}
 heat_health_numeric <- heat_health %>% 
   select(Year, urban_level, annual_COPD_deaths_per100000, 
@@ -50,6 +53,8 @@ corrplot(round(heat_health_numeric, 4), method="color",
          addCoef.col = 'black', tl.cex = 0.5, tl.srt = 45)
 ```
 
+### Plotting Changes in Variables Over Time
+These graphs look at the changes in key variables from 2008 to 2020 in different counties in North Carolina.
 
 ```{r, echo=FALSE}
 ggplot(heat_health, aes(x = Year, y = Median.AQI, color = County)) +
@@ -99,14 +104,22 @@ ggplot(heat_health, aes(x = Year, y = Count_ExHeat_Days, color = County)) +
        title = "Annual Number of Extreme Heat Days",
        subtitle = "In NC Counties From 2008-2020")
 ```
-
-
+### Akaike's Information Criterion
+To find the best fitting model, an AIC was run with the explanatory variables.
 ```{r}
 AIC_COPD <- lm(data = heat_health, annual_COPD_deaths_per100000 ~ urban_level + 
             Median.AQI + Count_ExHeat_Days)
 
 step(AIC_COPD)
+```
+The AIC concluded that removing urban level creates the model with the most explanatory power.
 
-plot(AIC_COPD)
+### Final Model
+```{r}
+AIC_COPD_final <- lm(formula = annual_COPD_deaths_per100000 ~ Median.AQI + 
+                       Count_ExHeat_Days, 
+    data = heat_health)
+
+summary(AIC_COPD_final)
 ```
 
