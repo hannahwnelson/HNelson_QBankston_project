@@ -412,3 +412,23 @@ write.csv(NC_AQI, "EPA_dailyAQI_NCbyCo_08-21_Clean.csv",
 
 ```
 
+```{r}
+SmkDrnk2020 <- read_csv(here("Raw/2020SmokingDrinkingNC.csv")) %>%
+  filter(FIPS != 37000) %>%
+  rename("PctSmoke" = "% Smokers")%>%
+  rename("PctDrnk" = "% Excessive Drinking")
+
+
+unique(SmkDrnk2020$PctSmoke)
+SmkDrnk2020 <- mutate(SmkDrnk2020, FIPS = as.character(FIPS))
+stage3_sf <- left_join(outcomes_2020_sf, SmkDrnk2020, by = c("GEOID" = "FIPS"))
+
+HealthIns <- read_csv(here("Raw/HealthInsurance2020NC.csv")) %>%
+  select("FIPS", "TotUninsured", "PctUninsured") %>%
+  mutate(FIPS = as.character(FIPS))
+
+stage3_sf <- left_join(tableau_outcomes_2020_sf, HealthIns, by = c("GEOID" = "FIPS"))
+
+write_csv(stage3_sf, (here("Cleaned/Stage3.csv")))
+```
+

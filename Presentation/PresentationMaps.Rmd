@@ -257,28 +257,5 @@ copd_map <- leaflet(outcomes_2020_sf) %>%
 copd_map
 
 ```
-```{r}
-SmkDrnk2020 <- read_csv(here("Raw/2020SmokingDrinkingNC.csv")) %>%
-  filter(FIPS != 37000) %>%
-  rename("PctSmoke" = "% Smokers")%>%
-  rename("PctDrnk" = "% Excessive Drinking")
-
-
-unique(SmkDrnk2020$PctSmoke)
-SmkDrnk2020 <- mutate(SmkDrnk2020, FIPS = as.character(FIPS))
-tableau_outcomes_2020_sf <- left_join(outcomes_2020_sf, SmkDrnk2020, by = c("GEOID" = "FIPS")) %>%
-  select(-"State.x", -"County.x", -"PctSmoke.x", -"% Excessive Drinking.x", -"State.y", -"County.y", -"PctSmoke.y", "% Excessive Drinking.y")
-
-HealthIns <- read_csv(here("Raw/HealthInsurance2020NC.csv")) %>%
-  select("FIPS", "TotUninsured", "PctUninsured") %>%
-  mutate(FIPS = as.character(FIPS))
-
-tableau_outcomes_2020_sf <- left_join(tableau_outcomes_2020_sf, HealthIns, by = c("GEOID" = "FIPS"))
-
-#output_directory <- "/Users/mac/Documents/HannahQuinn872/Presentation/"
-
-# Save the shapefile
-st_write(tableau_outcomes_2020_sf, paste0(output_directory, "2020outcometableau.shp"), driver = "ESRI Shapefile", append = FALSE)
-```
 
 

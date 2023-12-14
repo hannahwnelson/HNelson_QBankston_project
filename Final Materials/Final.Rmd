@@ -1,0 +1,465 @@
+---
+title: "Final"
+authors: 
+  - Hannah Nelson
+  - Quinn Bankson
+date: "2023-12-02"
+output:
+  bookdown::html_document2:
+    toc: true
+---
+
+
+```{r setup, include=FALSE, message=FALSE, echo=FALSE, error=FALSE}
+library(here)
+library(corrplot)
+library(tidyverse)
+library(ggplot2)
+library(dplyr)
+library(lubridate)
+library(stringr)
+library(sf)
+library(mapview)
+library(janitor)
+library(purrr)
+library(leaflet)
+library(webshot)
+getwd()
+here()
+here()
+
+EDvisits <- read.csv(here("Cleaned/CDC_EDvisits_NC_08-21_Clean.csv"))
+EDvisits <- EDvisits %>% select(State, Year, ED.Visits.per.100000)
+
+ExHeatDays <- read.csv(here("Cleaned/CDC_ExHeatDays_NCbyCo_08-21_Clean.csv"))
+ExHeatDays <- ExHeatDays %>% select(County, Year, Count_ExHeat_Days)
+
+
+AQI <- read.csv(here("Cleaned/EPA_dailyAQI_NCbyCo_08-21_Clean.csv"))
+AQI <- AQI %>% select(County, Year, Median.AQI)
+
+heat_health <- read.csv(here("Cleaned/Heat_Health_Data_Clean.csv"))
+heat_health <- heat_health %>% 
+  select(County, Year, urban_level, annual_COPD_deaths_per100000,
+         annual_asthma_ED_visits, Median.AQI, Count_ExHeat_Days)
+```
+
+# Rationale and Research Questions
+
+Research Question: What are the determinants of COPD mortality in North Carolina? Are rural counties really affected at a disproportionate rate? 
+
+Chronic Obsructive Pulmonary Disease (COPD) is the 6th leading cause of death in the U.S. The disorder is the cause of more than 140,000 deaths per year. According to the CDC, COPD is more than two times as common in rural areas in large cities. How does this manifest itself in North Carolina?
+
+Determinants of pulmonary health may include things like air quality, heat, and smoking rates. Factors such as heat exacerbate the effects of bad air quality, and other threats to pulmonary health can include health insurance coverage. Air quality and heat effects are often worse in urban areas, so why is COPD not worse in urban areas than rural areas? The CDCs own data will be explored to see if it is really the case the rural areas still suffer more from COPD, even though it may be true that urban areas are associated with heat island effects and poorer air quality. 
+
+\newpage
+# Data Set Information
+The majority of Data was found from the CDC. This includes the outcome variable of COPD mortality. Insurance and smoking data is from Count Health rankings & Road maps, a program of the University of Wisconsin Population Health Institute. This data not used for presentation purposes or for data exploration because it was not offered by the CDC. In the end this data was found and used to fill in gaps in the final analysis and methods for the research. 
+
+-CDC data on hospitalizations for asthma
+-CDC data on extreme heat
+-CDC data on COPD mortality
+https://www.cdc.gov/copd/data-and-statistics/county-estimates.html 
+
+-EPA data on AQI
+https://www.epa.gov/outdoor-air-quality-data/air-data-daily-air-quality-tracker
+
+-NCHS data on urban rural classification schemes
+https://www.cdc.gov/nchs/data_access/urban_rural.htm
+
+
+\newpage
+# Exploratory Analysis
+
+A correlation plot is used to test the strength of correlation between many of the determinants of interest against each other. Factors tested include year, urban_level, annual COPD deaths per 100,000, annual asthma ED visits, median AQI, and the number of extreme heat days. The highest correlations were between annual asthma ED visits for the county and urban level, median AQI and year, and extreme heat days and urban level. 
+This correlation revealed a problem for our data as it is. Annual asthma ED visits appears to be a less reliable health outcome than annual COPD mortality for the counties. This is likely because asthma ED visits is a count that is not adjusted for population size. This is a problem for urban level because it gives an association with urban areas and asthma when it is really just growth in population size in urban areas versus rural areas that is causing the correlation. 
+
+
+```{r, echo=FALSE}
+heat_health_numeric <- heat_health %>% 
+  select(Year, urban_level, annual_COPD_deaths_per100000, 
+         annual_asthma_ED_visits, Median.AQI, Count_ExHeat_Days)
+
+
+heat_health_numeric <- cor(heat_health_numeric)
+
+corrplot(round(heat_health_numeric, 4), method="color", 
+         addCoef.col = 'black', tl.cex = 0.5, tl.srt = 45)
+```
+
+
+
+Median AQI was mapped over time, using counties as different colored lines to see the extremes for various counties and years. The legend for counties is not included because there are too many counties, but the chart is still useful to watch the trends overtime. 
+
+```{r, echo=FALSE}
+ggplot(heat_health, aes(x = Year, y = Median.AQI, color = County)) +
+  geom_line() +
+  theme_minimal() +
+  theme(legend.position = "none") +
+  scale_x_continuous(breaks = seq(2008, 2020, by = 2)) +
+  labs(y = "Annual Median AQI", 
+       title = "Median AQI",
+       subtitle = "In NC Counties From 2008-2020")
+```
+
+
+
+
+Another colorful plot displays the change in annual COPD deaths overtime. This graph indicates that seasonality is at play in COPD deaths. We can tell because of the spikes that happen once a year. Being in winter weather exacerbates COPD issues seasonally. This is an intersting find becuase our initial hypothesis is that hot weather exacerbates pulmonary symptoms and makes breathing more difficult when combined with poor air quality. 
+
+```{r, echo=FALSE}
+ggplot(heat_health, aes(x = Year, y = annual_COPD_deaths_per100000, 
+                        color = County)) +
+  geom_line() +
+  theme_minimal() +
+  theme(legend.position = "none") +
+  scale_x_continuous(breaks = seq(2008, 2020, by = 2)) +
+  labs(y = "COPD Mortality Rate (per 100000)", 
+       title = "Annual Mortality From COPD",
+       subtitle = "In NC Counties From 2008-2020")
+```
+
+
+
+
+Asthma deaths were investigated over time but not used for any more analysis after this investigation. They are clearly spread all over the place and not normalized in any way to fit county populaitons. We decided to stick with one health come as the reprsentative for pulmonary heath; COPD. 
+
+```{r, echo=FALSE}
+ggplot(heat_health, aes(x = Year, y = annual_asthma_ED_visits, 
+                        color = County)) +
+  geom_line() +
+  theme_minimal() +
+  theme(legend.position = "none") +
+  scale_x_continuous(breaks = seq(2008, 2020, by = 2)) +
+  labs(y = "Number of Asthma Related ED Visits", 
+       title = "Annual Number of Asthma Related Emergency Department Visits",
+       subtitle = "In NC Counties From 2008-2020")
+```
+
+
+
+
+Annual number of extreme heat days was graphed over time. The decreasing trend in general was surprising. 
+
+```{r, echo=FALSE}
+ggplot(heat_health, aes(x = Year, y = Count_ExHeat_Days, color = County)) +
+  geom_line() +
+  theme_minimal() +
+  theme(legend.position = "none") +
+  scale_x_continuous(breaks = seq(2008, 2020, by = 2)) +
+  labs(y = "Number of Extreme Heat Days", 
+       title = "Annual Number of Extreme Heat Days",
+       subtitle = "In NC Counties From 2008-2020")
+```
+
+
+
+
+A step AIC was created along with a set of diagnostics plots to assess the performance of the potential model. The step AIC found the strongest model to be one that includes all of the following variables: 
+Year
+Median AQI
+Urban Level
+Count Of Extreme Heat Days
+
+Year was chosen to remain in the model as it appeared to be a determinant in earlier data exploration. COPD death is not constant over the years, so the effects of the year were included. 
+
+The residuals vs. fitted values plot helps to detect non-linearity and find outliers. The random scatter of points without patterns or trends indicates a likely linear relationship. 
+
+The normal Q-Q plot shows that points fall on a relatively straight line. There are some deviations that depart from normality, but the trend of the points is linear in nature. 
+
+The scale-location plot indicates that the data has homoscedasticity. The variance is constant. 
+
+The residuals vs leverage plot shwos that there are some influential points, but none cause serious concern for removal. 
+```{r}
+AIC_COPD <- lm(data = heat_health, annual_COPD_deaths_per100000 ~ urban_level + 
+            Median.AQI + Count_ExHeat_Days + Year)
+
+step(AIC_COPD)
+
+plot(AIC_COPD)
+```
+
+\newpage
+# Analysis
+Several stages of analysis take place. The first is an OLS analysis that looks at counties in which all of the data is available. This OLS analysis looks at the years from 2008 and 2020, the same ones investigated in the data exploration. The second stage of the analysis is a spatial analysis. The spatial analysis focuses on determinants in the year 2020. The maps inspired a third stage of analysis. This stage looks at some extra determinants such as health insurance and smoking data. 
+
+## Stage One of Analysis
+
+Urban level is regressed on COPD mortality to check the direction of the relationship. This auxiliary regression shows that increases in urban level move COPD mortality upwards. This means the higher the urban level, the more rural the area.
+Extreme heat days is regressed on COPD morality to check the direction of the relationship. The regression shows that increasing extreme heat days lowers COPD mortality on average.
+Annual median air quality index is regressed on COPD mortality to check the direction of the relationship. The regression shows that the COPD deaths decrease slightly when median AQI increases. 
+
+The main regression for this stage of analysis includes urban level, median AQI, count of extreme heat days, and year, all together. 
+
+The results show that all of the variables except for year are significant at less than a .01 P value. 
+Urban level, as one of our main determinants of interest, can be ineterpreted as follows: 
+For every 1 unit increase in urban level, annual COPD mortality increases by 1.993 on average, holding all else constant. 
+```{r}
+
+aux1_urban <- lm(data = heat_health, annual_COPD_deaths_per100000 ~ urban_level)
+aux2_heat <- lm(data = heat_health, annual_COPD_deaths_per100000 ~ Count_ExHeat_Days)
+aux3_aqi <- lm(data = heat_health, annual_COPD_deaths_per100000 ~ Median.AQI)
+
+summary(aux1_urban)
+summary(aux2_heat)
+summary(aux3_aqi)
+
+mv_reg1<- lm(data = heat_health, annual_COPD_deaths_per100000 ~ urban_level + 
+            Median.AQI + Count_ExHeat_Days + Year)
+
+summary(mv_reg1)
+```
+
+## Stage 2 of Analysis
+
+A spatial analysis takes place. These maps help explore some of the trends we saw in our yearly data that was used for the previous OLS. We now take the values for the years 2021 and map them on North Carolina. The shapefile used is from the spatial shape files in the ENVIORN872 course. 
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+# Read in counties for NC
+
+nccounties_sf <- st_read(here('Raw/Spatial/cb_2018_us_county_20m.shp')) %>%
+  filter(STATEFP == 37)
+
+mapview(nccounties_sf)
+```
+Mapview is used to visualize all of the counties in North Carolina. 
+
+```{r, echo=FALSE, show_col_types = FALSE, message=FALSE, error=FALSE}
+#EDVisits
+edvisits <- read_csv(here('Cleaned/CDC_EDvisits_NC_08-21_Clean.csv'), show_col_types = FALSE)
+
+#EXHeatDays
+exheatdays <- read_csv(here('Cleaned/CDC_ExHeatDays_NCbyCo_08-21_Clean.csv'), show_col_types = FALSE)
+
+#AQI 
+aqi <- read_csv(here('Cleaned/EPA_dailyAQI_NCbyCo_08-21_Clean.csv'), show_col_types = FALSE)
+
+#Urban
+
+urbanlvl <- read_csv(here('Raw/urbancodes.csv'), show_col_types = FALSE)
+# Rename columns
+colnames(urbanlvl) <- c("FIPS", "state", "county", "a", "b", "c", "lvlcode", "d", "e")
+
+urbanlvl <- urbanlvl %>%
+  filter(state == "NC") %>%
+  select(-"state", -"county", -"a", -"b", -"c", -"d", -"e") %>%
+  mutate(FIPS = as.character(FIPS))
+
+counties_urban_sf <- full_join(nccounties_sf, urbanlvl, by =c("GEOID" = "FIPS"))
+
+# AQI 2021
+
+aqi_map_2021data <- aqi %>%
+  filter(Year == 2021) %>%
+  select("County", "Median.AQI") %>%
+  mutate(County = str_replace(County, " County", ""))
+
+aqiurban21_sf <- left_join(counties_urban_sf, aqi_map_2021data, by = c("NAME" = "County"))
+
+# AQI 2011
+aqi_map_2011data <- aqi %>%
+  filter(Year == 2011) %>%
+  select("County", "Median.AQI") %>%
+  mutate(County = str_replace(County, " County", ""))
+
+aqiurban11_sf <- left_join(counties_urban_sf, aqi_map_2011data, by = c("NAME" = "County"))
+```
+ 1 Represents a large central metro (red)
+ 2 Represents a large fringe metro (orange)
+ 3 Represents a medium metro (yellow)
+ 4 Represents a small metro (green)
+ 5 Represents a micropolitan area (blue)
+ 6 Represents a noncore area (violet)
+
+The most urban and least urban parts of NC are visualized. The county types are spread out, but there is a concentration of the most rural areas in the western part of NC. 
+```{r, echo=FALSE}
+level_colors <- c("#FF0000", "#FFA500", "#FFFF00", "#008000", "#0000FF", "#800080")
+
+# Transforming the map
+counties_urban_sf <- st_transform(counties_urban_sf, crs = st_crs("+proj=longlat +datum=WGS84"))
+
+urbanmap <- leaflet(counties_urban_sf) %>%
+  addProviderTiles("CartoDB.Positron") %>%
+  addPolygons(
+    fillColor = ~level_colors[lvlcode],
+    fillOpacity = 0.7,
+    color = "white",
+    weight = 1,
+    popup = ~paste("County: ", NAME, "Urban Code: ", lvlcode)
+  ) %>%
+  addLegend(
+    position = "bottomright",
+    colors = level_colors,
+    labels = c("1 (Most Urban)", "2", "3", "4", "5", "6 (Least Urban"),
+    title = "Urban Level Code"
+  )
+
+urbanmap
+```
+
+Air quality is mapped for 2021. Rural areas in the west seem to be frequently associated with lower air quality. This was a surprise to us, as we thought urban areas would constantly have the higher AQI. 
+```{r, echo=FALSE}
+library(leaflet)
+library(sf)
+
+aqiurban21_sf <- st_transform(aqiurban21_sf, crs = st_crs("+proj=longlat +datum=WGS84"))
+
+aqi_colors <- c("#FFFFFF", "#FFA500", "#764825","#695f5e", "#8B0000", "#FF0000")  
+
+# Create bins for AQI values
+bins <- c(0, 1, 25, 30, 35, 40, 45)  
+aqiurban21_sf$AQI_bin <- cut(aqiurban21_sf$Median.AQI, breaks = bins, labels = FALSE, include.lowest = TRUE)
+
+# Create a leaflet map
+aqi_map <- leaflet(aqiurban21_sf) %>%
+  addProviderTiles("CartoDB.Positron") %>%  
+  addPolygons(
+    fillColor = ~aqi_colors[AQI_bin],
+    fillOpacity = 0.7,
+    color = "white",
+    weight = 1,
+    popup = ~paste("County: ", NAME, "<br>AQI: ", Median.AQI)
+  ) %>%
+  addLegend(
+    position = "bottomright",
+    colors = aqi_colors,
+    labels = c("No Data", "Less than 25", "26-30", "31-35", "36-40", "41-45"),
+    title = "AQI Values (2021)"
+  )
+
+# Display the AQI map
+aqi_map
+
+```
+
+Air quality is mapped for 2011. We decided to map values for 2011 in an attempt to separate the AQI outcomes from the COVID pandemic when they may have dropped unusually low. 2011 had much higher AQIs in general. Western, rural areas still suffered from high AQI. 
+```{r, echo=FALSE}
+library(leaflet)
+library(sf)
+
+aqiurban11_sf <- st_transform(aqiurban11_sf, crs = st_crs("+proj=longlat +datum=WGS84"))
+
+# Define a discrete color palette for AQI bins
+aqi_colors <- c("#FFFFFF", "#FFA500", "#764825","#695f5e", "#8B0000", "#FF0000", "#FF439B") 
+
+# Create bins for AQI values
+bins <- c(0, 1, 25, 30, 35, 40, 45, 50) 
+aqiurban11_sf$AQI_bin <- cut(aqiurban11_sf$Median.AQI, breaks = bins, labels = FALSE, include.lowest = TRUE)
+
+# Create a leaflet map
+aqi_map11 <- leaflet(aqiurban11_sf) %>%
+  addProviderTiles("CartoDB.Positron") %>%  
+  addPolygons(
+    fillColor = ~aqi_colors[AQI_bin],
+    fillOpacity = 0.7,
+    color = "white",
+    weight = 1,
+    popup = ~paste("County: ", NAME, "<br>AQI: ", Median.AQI)
+  ) %>%
+  addLegend(
+    position = "bottomright",
+    colors = aqi_colors,
+    labels = c("No Data", "Less than 25", "26-30", "31-35", "36-40", "41-45", "45+"),
+    title = "AQI Values (2011)"
+  )
+
+aqi_map11
+```
+
+```{r, echo=FALSE, show_col_types = FALSE}
+asthma <-read_csv(here("Raw/CDC_AsthmaED_NCbyCo_08-21.csv"), show_col_types = FALSE)
+
+copd <- read_csv(here("Raw/CDC_COPDmort_NCbyCo_00-20.csv"), show_col_types = FALSE)
+
+aqi_map_2020data <- aqi %>%
+  filter(Year == 2020) %>%
+  select("County", "Median.AQI") %>%
+  mutate(County = str_replace(County, " County", ""))
+
+aqiurban20_sf <- left_join(counties_urban_sf, aqi_map_2020data, by = c("NAME" = "County"))
+
+asthma_2020 <- asthma %>%
+  filter(Year == 2020) %>%
+  select(as.character("CountyFIPS"), "Value") %>%
+  rename("asthmaval" = "Value")
+
+  copd_2020 <- copd %>%
+  filter(Year == 2020) %>%
+  select(as.character("CountyFIPS"), "Value") %>%
+  rename("copdval" = "Value")
+
+outcomes_2020_sf <- left_join(aqiurban20_sf, asthma_2020 %>% mutate(CountyFIPS = as.character(CountyFIPS)), by = c("GEOID" = "CountyFIPS")) %>%
+  left_join(copd_2020 %>% mutate(CountyFIPS = as.character(CountyFIPS)), by = c("GEOID" = "CountyFIPS"))
+```
+
+
+The final map created is COPD mortality in NC. This map uses a sequential color change to show ares that suffered from higher annual COPD mortality. These areas match up with many of the more rural, western areas that have been flagged by previous determinants of COPD. Rural southern counties like Richmond and Scotland county had relatively high COPD mortality as well. The leader in COPD moratlity was Northwestern NC county Alleghany county. 
+```{r, echo=FALSE}
+outcomes_2020_sf <- outcomes_2020_sf %>%
+  filter(!is.na(copdval) & copdval != "Suppressed")
+
+outcomes_2020_sf$copdval <- as.numeric(outcomes_2020_sf$copdval)
+
+outcomes_2020_sf <- st_transform(outcomes_2020_sf, crs = st_crs("+proj=longlat +datum=WGS84"))
+
+# Remove rows with NAs in COPD values
+outcomes_2020_sf <- outcomes_2020_sf[complete.cases(outcomes_2020_sf$copdval), ]
+
+# Define a continuous color palette for COPD values
+copd_palette <- colorNumeric(
+  palette = "Blues",
+  domain = outcomes_2020_sf$copdval
+)
+
+# Create a leaflet map
+copd_map <- leaflet(outcomes_2020_sf) %>%
+  addProviderTiles("CartoDB.Positron") %>%  
+  addPolygons(
+    fillColor = ~copd_palette(copdval),
+    fillOpacity = 0.7,
+    color = "white",
+    weight = 1,
+    popup = ~paste("County: ", NAME, "<br>COPD Value: ", copdval)
+  ) %>%
+  addLegend(
+    position = "bottomright",
+    pal = copd_palette,
+    values = ~copdval,
+    title = "COPD Values",
+    opacity = 0.7
+  )
+
+copd_map
+
+```
+#Stage 3 of the analysis is more OLS analysis including smoking and health insurance for 2021
+
+In a final bit of analysis, we attempted to see if smoking and health insurance contributed COPD mortality in 2021. We did not use median AQI or exterme heat days for this analysis since it was only one year of analysis and there was not enough data from these variables (not enough counties recorded the info in 2021). 
+
+The results of this analysis show that the direction of the relationships between percent of population that smokes, perent of population that is uninsured, and COPD mortality makes sense. Higher rates of smoking and non-insurance are leading to higher rates of COPD mortality in these areas. The AIC shows that when only accounting for this limited set of variables, level code becomes unimportant for the regression. 
+
+```{r}
+stage3 <- read_csv(here("Cleaned/Stage3.csv"), show_col_types = FALSE)
+
+extra_COPD <- lm(data = stage3, copdval ~ lvlcode + PctSmoke + PctUninsured.x)
+
+step(extra_COPD)
+summary(extra_COPD)
+```
+\newpage
+
+# Summary and Conclusions
+
+Our data exploration and multi-stage analysis leads us to believe that urban areas do not experience COPD at as high of rates as rural areas in NC. Our analysis showed that higher heat that may be associated with urban heat island effects did not play a large role in increasing COPD deaths. Smoking and health insurance rates did play a large role, as well as urban or rural levels. This matches the findings of the CDC. 
+
+Areas of NC that are more rural have other factors of interest such as popoulations that work in mining, manufacturing, and farm work. These are areas of employment that expose employees to high levels of PM. Employment is a factor of interest that could show how different professions lead to different COPD outcomes. 
+
+In rural NC, people can be located far away form healthcare. For this reason, it is crucial for policy and advocacy to promote teleheatlh, virtual appointments, and phone visits for elderly rural populations that may not get regular health care because they are uninsured or located far away. 
+
+\newpage 
+
+# References 
+
+https://www.nhlbi.nih.gov/BreatheBetter
+
+
