@@ -1,0 +1,125 @@
+---
+title: "Final"
+authors: "Hannah Nelson & Quinn Bankson"
+date: "2023-12-02"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(here)
+library(tidyverse)
+library(ggplot2)
+library(dplyr)
+library(lubridate)
+library(stringr)
+library(sf)
+library(leaflet)
+library(mapview)
+library(janitor)
+library(purrr)
+library(corrplot)
+
+here()
+
+EDvisits <- read.csv(here("Cleaned/CDC_EDvisits_NC_08-21_Clean.csv"))
+EDvisits <- EDvisits %>% select(State, Year, ED.Visits.per.100000)
+
+ExHeatDays <- read.csv(here("Cleaned/CDC_ExHeatDays_NCbyCo_08-21_Clean.csv"))
+ExHeatDays <- ExHeatDays %>% select(County, Year, Count_ExHeat_Days)
+
+
+AQI <- read.csv(here("Cleaned/EPA_dailyAQI_NCbyCo_08-21_Clean.csv"))
+AQI <- AQI %>% select(County, Year, Median.AQI)
+
+heat_health <- read.csv(here("Cleaned/Heat_Health_Data_Clean.csv"))
+heat_health <- heat_health %>% 
+  select(County, Year, urban_level, annual_COPD_deaths_per100000,
+         annual_asthma_ED_visits, Median.AQI, Count_ExHeat_Days)
+```
+
+#### Investigating Data
+
+## Corrplot
+This corrplot visualizes relationships between variables in the data to create an idea of what to look for in an exploratory data analysis.
+```{r, echo=FALSE}
+heat_health_numeric <- heat_health %>% 
+  select(Year, urban_level, annual_COPD_deaths_per100000, 
+         annual_asthma_ED_visits, Median.AQI, Count_ExHeat_Days)
+
+
+heat_health_numeric <- cor(heat_health_numeric)
+
+corrplot(round(heat_health_numeric, 4), method="color", 
+         addCoef.col = 'black', tl.cex = 0.5, tl.srt = 45)
+```
+
+### Plotting Changes in Variables Over Time
+These graphs look at the changes in key variables from 2008 to 2020 in different counties in North Carolina.
+
+```{r, echo=FALSE}
+ggplot(heat_health, aes(x = Year, y = Median.AQI, color = County)) +
+  geom_line() +
+  theme_minimal() +
+  theme(legend.position = "none") +
+  scale_x_continuous(breaks = seq(2008, 2020, by = 2)) +
+  labs(y = "Annual Median AQI", 
+       title = "Median AQI",
+       subtitle = "In NC Counties From 2008-2020")
+```
+
+
+```{r, echo=FALSE}
+ggplot(heat_health, aes(x = Year, y = annual_COPD_deaths_per100000, 
+                        color = County)) +
+  geom_line() +
+  theme_minimal() +
+  theme(legend.position = "none") +
+  scale_x_continuous(breaks = seq(2008, 2020, by = 2)) +
+  labs(y = "COPD Mortality Rate (per 100000)", 
+       title = "Annual Mortality From COPD",
+       subtitle = "In NC Counties From 2008-2020")
+```
+
+
+```{r, echo=FALSE}
+ggplot(heat_health, aes(x = Year, y = annual_asthma_ED_visits, 
+                        color = County)) +
+  geom_line() +
+  theme_minimal() +
+  theme(legend.position = "none") +
+  scale_x_continuous(breaks = seq(2008, 2020, by = 2)) +
+  labs(y = "Number of Asthma Related ED Visits", 
+       title = "Annual Number of Asthma Related Emergency Department Visits",
+       subtitle = "In NC Counties From 2008-2020")
+```
+
+
+```{r, echo=FALSE}
+ggplot(heat_health, aes(x = Year, y = Count_ExHeat_Days, color = County)) +
+  geom_line() +
+  theme_minimal() +
+  theme(legend.position = "none") +
+  scale_x_continuous(breaks = seq(2008, 2020, by = 2)) +
+  labs(y = "Number of Extreme Heat Days", 
+       title = "Annual Number of Extreme Heat Days",
+       subtitle = "In NC Counties From 2008-2020")
+```
+### Akaike's Information Criterion
+To find the best fitting model, an AIC was run with the explanatory variables.
+```{r}
+AIC_COPD <- lm(data = heat_health, annual_COPD_deaths_per100000 ~ urban_level + 
+            Median.AQI + Count_ExHeat_Days)
+
+step(AIC_COPD)
+```
+The AIC concluded that removing urban level creates the model with the most explanatory power.
+
+### Final Model
+```{r}
+AIC_COPD_final <- lm(formula = annual_COPD_deaths_per100000 ~ Median.AQI + 
+                       Count_ExHeat_Days, 
+    data = heat_health)
+
+summary(AIC_COPD_final)
+```
+
